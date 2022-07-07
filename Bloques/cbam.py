@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import Conv2D, BatchNormalization, Add
+from tensorflow.keras.layers import Conv2D, BatchNormalization, Add, Dense, Activation
 import tensorflow as tf
 
 
@@ -14,14 +14,14 @@ def CBAM(entrada, num_kernel, ratio):
   favr= tf.reduce_mean(entrada, axis= [-1], keepdims= True)
   fmax= tf.reduce_max(entrada, axis= [-1], keepdims= True)
   
-  davr_r= tf.keras.layers.Dense(reduccion, activation= 'relu')(favr)
-  dmax_r= tf.keras.layers.Dense(reduccion, activation= 'relu')(fmax)
+  davr_r= Dense(reduccion, activation= 'relu')(favr)
+  dmax_r= Dense(reduccion, activation= 'relu')(fmax)
   
-  davr_a= tf.keras.layers.Dense(num_kernel, activation= 'relu')(davr_r)
-  dmax_a= tf.keras.layers.Dense(num_kernel, activation= 'relu')(dmax_r)
+  davr_a= Dense(num_kernel, activation= 'relu')(davr_r)
+  dmax_a= Dense(num_kernel, activation= 'relu')(dmax_r)
   
-  x= tf.add(davr_a, dmax_a)
-  x= tf.keras.layers.Activation('sigmoid')(x)
+  x= Add()([davr_a, dmax_a])
+  x= Activation('sigmoid')(x)
   
   #Multiplicación del resblock 1
   r= tf.math.multiply(entrada, x)
@@ -32,7 +32,7 @@ def CBAM(entrada, num_kernel, ratio):
   c= tf.concat([favr_s, fmax_s], axis= -1)
   c= Conv2D(1, 7, padding= 'same')(c)
   c= BatchNormalization()(c)
-  c= tf.keras.layers.Activation('sigmoid')(c)
+  c= Activation('sigmoid')(c)
 
   #Multiplicacion del resblock 2
   salida= tf.math.multiply(x, c)
